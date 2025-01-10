@@ -8,8 +8,11 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from starlette.requests import Request
 from fastapi.templating import Jinja2Templates
 import os
+from fastapi.staticfiles import StaticFiles
+
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Load your pre-trained LSTM model
 model_path = 'model/Fraud_detection_model_.h5'
