@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Transactions - Graph</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: #1e2a78;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-weight: bold;
+        }
+
+        .navbar-nav .nav-link {
+            color: #d9e4ff;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: white;
+        }
+
+        .container {
+            margin-top: 80px;
+        }
+
+        h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #1e2a78;
+            font-weight: bold;
+        }
+
+        canvas {
+            width: 100% !important;
+            max-height: 500px;
+            margin-bottom: 40px;
+        }
+
+        footer {
+            background-color: #1e2a78;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Fraud Detection</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/chart">Charts</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/about">About Us</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="container">
+    <h3>Fraud vs Non-Fraud Transactions</h3>
+    <canvas id="barChart"></canvas>
+    <h3>Scatter Plot of Transactions</h3>
+    <canvas id="scatterChart"></canvas>
+</div>
+
+<!-- Footer -->
+<footer>
+    &copy; 2025 Fraud Detection | All Rights Reserved
+</footer>
+
+<script>
+// Fetch data from FastAPI /chart/data endpoint
+fetch('/chart/data')
+    .then(response => response.json())
+    .then(data => {
+        const fraudCount = data.fraud_count;
+        const nonFraudCount = data.non_fraud_count;
+        const scatterData = data.scatter_data;
+
+        // Update Bar Chart
+        const barChart = new Chart(document.getElementById('barChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Fraudulent Transactions', 'Non-Fraudulent Transactions'],
+                datasets: [{
+                    label: 'Number of Transactions',
+                    data: [fraudCount, nonFraudCount],
+                    backgroundColor: ['#e74c3c', '#2ecc71'],
+                    borderColor: ['#c0392b', '#27ae60'],
+                    borderWidth: 1,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}` } }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Number of Transactions', color: '#333' } },
+                    x: { title: { display: true, text: 'Transaction Type', color: '#333' } }
+                }
+            }
+        });
+
+        // Update Scatter Chart
+        const scatterChart = new Chart(document.getElementById('scatterChart').getContext('2d'), {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Fraudulent Transactions',
+                        data: scatterData.filter(d => d.type === 'FRAUD').map(d => ({ x: d.x, y: d.y, tid: d.tid })), 
+                        backgroundColor: '#e74c3c',
+                        borderColor: '#c0392b',
+                        pointRadius: 8,
+                    },
+                    {
+                        label: 'Non-Fraudulent Transactions',
+                        data: scatterData.filter(d => d.type === 'NON-FRAUD').map(d => ({ x: d.x, y: d.y, tid: d.tid })), 
+                        backgroundColor: '#2ecc71',
+                        borderColor: '#27ae60',
+                        pointRadius: 8,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const point = scatterData[context.dataIndex];
+                                return `TID: ${point.tid}, Value: (${context.raw.x}, ${context.raw.y})`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Transaction Index', color: '#333' } },
+                    y: { title: { display: true, text: 'Reconstruction Error', color: '#333' } }
+                }
+            }
+        });
+    })
+    .catch(error => console.error('Error fetching data:', error));
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+
+</body>
+</html>
