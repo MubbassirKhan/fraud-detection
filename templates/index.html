@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,24 +8,30 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body class="bg-gray-100 text-gray-800">
     <!-- Header -->
     <header class="bg-black text-white p-4 flex items-center justify-between">
-        <div class="flex flex-col items-center">
-            <div class="text-2xl font-bold">FRAUD DETECTION SYSTEM</div>
-        </div>
+        <div class="text-2xl font-bold">FRAUD DETECTION SYSTEM</div>
         <span class="text-sm italic">Admin Analytics Dashboard</span>
+        <button id="menu-toggle" class="md:hidden p-2 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+        </button>
     </header>
 
     <!-- Main Container -->
     <div class="flex flex-col md:flex-row min-h-screen">
         <!-- Sidebar -->
-        <aside class="bg-gray-900 text-white w-full md:w-64 p-4">
+        <aside id="sidebar" class="bg-gray-900 text-white w-full md:w-64 p-4 md:block hidden">
             <nav class="space-y-4">
                 <a href="/" class="block p-2 rounded-md bg-gray-800">Home</a>
                 <a href="analytics" class="block p-2 rounded-md hover:bg-gray-800">View Analytics</a>
                 <a href="check" class="block p-2 rounded-md hover:bg-gray-800">Check Status</a>
                 <a href="about" class="block p-2 rounded-md hover:bg-gray-800">About Us</a>
+                <!-- <a href="login" class="block p-2 rounded-md hover:bg-gray-800">Login</a> -->
             </nav>
         </aside>
 
@@ -34,18 +41,112 @@
             <section class="bg-white rounded-lg shadow-md p-8 mb-6 text-center">
                 <h1 class="text-4xl font-bold text-gray-800 mb-4">Welcome, Admin!</h1>
                 <p class="text-lg text-gray-600 mb-6">
-                    Manage fraud detection for e-commerce transactions. 
+                    Manage fraud detection for e-commerce transactions.
                     Ensure security, monitor activities, and take control of user management seamlessly.
                 </p>
                 <div class="flex justify-center space-x-4">
-                    <a href="analytics" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-500 transition">
+                    <a href="analytics"
+                        class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-500 transition">
                         View Analytics
                     </a>
-                    <a href="#user-management" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-500 transition">
+                    <a href="#user-management"
+                        class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-500 transition">
                         Manage Users
                     </a>
                 </div>
             </section>
+            <!-- Wrapper for both charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Pie Chart -->
+                <div class="w-full h-96">
+                    <canvas id="pieChart"></canvas>
+                </div>
+
+                <!-- Area Chart -->
+                <div class="w-full h-96">
+                    <canvas id="areaChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Script for Pie and Area Chart -->
+            <script>
+                fetch('/chart/data')
+                    .then(response => response.json())
+                    .then(data => {
+                        const fraudCount = data.fraud_count;
+                        const nonFraudCount = data.non_fraud_count;
+                        const scatterData = data.scatter_data;
+
+                        // Pie Chart
+                        new Chart(document.getElementById('pieChart').getContext('2d'), {
+                            type: 'pie',
+                            data: {
+                                labels: ['Fraudulent Transactions', 'Non-Fraudulent Transactions'],
+                                datasets: [{
+                                    label: 'Fraud vs Non-Fraud',
+                                    data: [fraudCount, nonFraudCount],
+                                    backgroundColor: ['#e74c3c', '#2ecc71'],
+                                    borderColor: ['#c0392b', '#27ae60'],
+                                    borderWidth: 1,
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function (tooltipItem) {
+                                                const percentage = Math.round(tooltipItem.raw / (fraudCount + nonFraudCount) * 100);
+                                                return `${tooltipItem.label}: ${tooltipItem.raw} (${percentage}%)`;
+                                            }
+                                        }
+                                    },
+                                    legend: {
+                                        position: 'top',
+                                        labels: { fontSize: 14, padding: 10 }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Area Chart
+                        new Chart(document.getElementById('areaChart').getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: scatterData.map(d => d.x), // Use x-axis for timeline or transaction index
+                                datasets: [{
+                                    label: 'Reconstruction Error (Area)',
+                                    data: scatterData.map(d => d.y), // Use y-axis for reconstruction error
+                                    fill: true,
+                                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                                    borderColor: '#2ecc71',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function (context) {
+                                                return `Reconstruction Error: ${context.raw}`;
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: { title: { display: true, text: 'Transaction Index', color: '#333' } },
+                                    y: { title: { display: true, text: 'Reconstruction Error', color: '#333' }, beginAtZero: true }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Error fetching data:', error));
+            </script>
+            <br><br>
 
             <!-- Features Section -->
             <section>
@@ -82,37 +183,19 @@
                     </div>
                 </div>
             </section>
-
-            
         </main>
     </div>
 
-    <!-- Chart.js Script -->
+    <!-- Script for Sidebar Toggle -->
     <script>
-        const ctx = document.getElementById('fraudTrendChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                datasets: [{
-                    label: 'Fraudulent Transactions',
-                    data: [12, 19, 13, 15, 22, 30, 25],
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true }
-                },
-                scales: {
-                    x: { beginAtZero: true },
-                    y: { beginAtZero: true }
-                }
-            }
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('block');
         });
     </script>
 </body>
+
 </html>

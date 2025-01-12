@@ -1,28 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About Us - Fraud Detection System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body class="bg-gray-100 text-gray-800">
     <!-- Header -->
     <header class="bg-black text-white p-4 flex items-center justify-between">
         <div class="text-2xl font-bold">FRAUD DETECTION SYSTEM</div>
         <span class="text-sm italic">Admin Analytics Dashboard</span>
+        <button id="menu-toggle" class="md:hidden p-2 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+        </button>
     </header>
 
     <!-- Main Container -->
     <div class="flex flex-col md:flex-row min-h-screen">
         <!-- Sidebar -->
-        <aside class="bg-gray-900 text-white w-full md:w-64 p-4">
+        <aside id="sidebar" class="bg-gray-900 text-white w-full md:w-64 p-4 md:block hidden">
             <nav class="space-y-4">
                 <a href="/" class="block p-2 rounded-md hover:bg-gray-800">Home</a>
                 <a href="analytics" class="block p-2 rounded-md hover:bg-gray-800">View Analytics</a>
                 <a href="check" class="block p-2 rounded-md hover:bg-gray-800">Check Status</a>
                 <a href="about" class="block p-2 rounded-md bg-gray-800">About Us</a>
+                <!-- <a href="login" class="block p-2 rounded-md hover:bg-gray-800">Login</a> -->
             </nav>
         </aside>
 
@@ -37,25 +45,53 @@
                 <!-- Company Overview -->
                 <div class="bg-white shadow-lg rounded-lg p-6 mb-6 hover:shadow-2xl transition-shadow duration-300">
                     <h2 class="text-2xl font-bold text-gray-800 mb-4">Our Mission</h2>
-                    <p class="text-lg text-gray-700">We are committed to providing a reliable and efficient fraud detection system to safeguard e-commerce transactions. Our goal is to enhance security and improve trust in online transactions through advanced machine learning and data analytics.</p>
+                    <p class="text-lg text-gray-700">We are committed to providing a reliable and efficient fraud
+                        detection system to safeguard e-commerce transactions. Our goal is to enhance security and
+                        improve trust in online transactions through advanced machine learning and data analytics.</p>
                 </div>
-
                 <!-- Team Overview -->
                 <div class="bg-white shadow-lg rounded-lg p-6 mb-6 hover:shadow-2xl transition-shadow duration-300">
                     <h2 class="text-2xl font-bold text-gray-800 mb-4">Our Team</h2>
-                    <p class="text-lg text-gray-700">Our team consists of experts in the fields of machine learning, data science, and cybersecurity. We work together to create innovative solutions for fraud prevention and detection in online commerce.</p>
+                    <p class="text-lg text-gray-700">Our team consists of experts in the fields of machine learning,
+                        data science, and cybersecurity. We work together to create innovative solutions for fraud
+                        prevention and detection in online commerce.</p>
+                </div>
+                <div class="bg-white shadow-lg rounded-lg p-6 mb-6 hover:shadow-2xl transition-shadow duration-300">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">About Me</h2>
+                    <p class="text-lg text-gray-700">Hello, I'm <strong>Mubbassir Khan</strong>, a passionate web
+                        developer pursuing my MCA at KLE IT Hubli. I completed my BSc in Computer Science from KCD
+                        College, Dharwad. I specialize in creating responsive websites and have a keen interest in
+                        backend development and machine learning.</p>
+                    <p class="text-lg text-gray-700">You can connect with me on <a
+                            href="https://linkedin.com/in/mubbassir-khan-jahagirdar-081715271" target="_blank"
+                            class="text-blue-500 hover:underline">LinkedIn</a>.</p>
                 </div>
 
                 <!-- About The Company -->
                 <div class="bg-white shadow-lg rounded-lg p-6 mb-6 hover:shadow-2xl transition-shadow duration-300">
                     <h2 class="text-2xl font-bold text-gray-800 mb-4">About The Company</h2>
                     <div class="flex items-center space-x-6">
-                        <img src="/static/images/pic1.webp" alt="Company Image" class="w-48 h-48 object-cover rounded-lg shadow-lg">
-                        <p class="text-lg text-gray-700">Our company, <a href="https://cevi.co.in/" class="text-blue-500 hover:underline" target="_blank">CEVI</a>, is a leading provider of innovative technology solutions. We specialize in machine learning, artificial intelligence, and data analytics to help businesses streamline operations and enhance security. Our team of experts works tirelessly to deliver cutting-edge solutions to tackle complex challenges, including fraud detection in e-commerce transactions.</p>
+                        <img src="/static/images/pic1.webp" alt="Company Image"
+                            class="w-48 h-48 object-cover rounded-lg shadow-lg">
+                        <p class="text-lg text-gray-700">Our company, <a href="https://cevi.co.in/"
+                                class="text-blue-500 hover:underline" target="_blank">CEVI</a>, is a leading provider of
+                            innovative technology solutions. We specialize in machine learning,...</p>
                     </div>
                 </div>
             </section>
         </main>
     </div>
+
+    <!-- Script for Sidebar Toggle -->
+    <script>
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('block');
+        });
+    </script>
 </body>
+
 </html>

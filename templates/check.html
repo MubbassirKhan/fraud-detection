@@ -53,20 +53,26 @@
     <header class="bg-black text-white p-4 flex items-center justify-between">
         <div class="text-2xl font-bold">FRAUD DETECTION SYSTEM</div>
         <span class="text-sm italic">Admin Analytics Dashboard</span>
+        <button id="menu-toggle" class="md:hidden p-2 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+        </button>
     </header>
 
     <!-- Main Container -->
     <div class="flex flex-col md:flex-row min-h-screen">
         <!-- Sidebar -->
-        <aside class="bg-gray-900 text-white w-full md:w-64 p-4">
+        <aside id="sidebar" class="bg-gray-900 text-white w-full md:w-64 p-4 md:block hidden">
             <nav class="space-y-4">
                 <a href="/" class="block p-2 rounded-md hover:bg-gray-800">Home</a>
-                <a href="analytics" class="block p-2 rounded-md  hover:bg-gray-800">View Analytics</a>
+                <a href="analytics" class="block p-2 rounded-md hover:bg-gray-800">View Analytics</a>
                 <a href="check" class="block p-2 rounded-md bg-gray-800">Check Status</a>
                 <a href="about" class="block p-2 rounded-md hover:bg-gray-800">About Us</a>
+                <!-- <a href="login" class="block p-2 rounded-md hover:bg-gray-800">Login</a> -->
             </nav>
         </aside>
-
 
         <!-- Main Content -->
         <main class="flex-1 p-6">
@@ -88,26 +94,39 @@
                                 placeholder="Enter Transaction ID (e.g., TXN001)" required>
                         </div>
                         <button type="submit"
-                            class="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition duration-300">
-                            Check Status
-                        </button>
+                            class="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-500 transition">Submit</button>
                     </form>
                 </div>
 
-                <!-- Loading Spinner (Initially Hidden) -->
-                <div id="loading" class="bounce-loader hidden">
-                    <span></span><span></span><span></span>
-                </div>
+                <!-- Transaction Status Section -->
+                <div class="bg-white shadow-md rounded-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Transaction Status</h2>
+                    <div id="statusResult" class="text-lg text-gray-700">
+                        <!-- Loading Spinner (Initially Hidden) -->
+                        <div id="loading" class="bounce-loader hidden">
+                            <span></span><span></span><span></span>
+                        </div>
 
-                <!-- Result Section (Initially Hidden) -->
-                <div id="result" class="hidden mt-6">
-                    <h3 id="resultText" class="text-2xl font-semibold"></h3>
+                        <!-- Result Section (Initially Hidden) -->
+                        <div id="result" class="hidden mt-6">
+                            <h3 id="resultText" class="text-2xl font-semibold"></h3>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
+    <!-- Script for Sidebar Toggle -->
     <script>
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('block');
+        });
+
         document.getElementById('txnForm').addEventListener('submit', async function (e) {
             e.preventDefault(); // Prevent the default form submission
 
@@ -128,7 +147,7 @@
             }
 
             try {
-                const response = await fetch('/check/', {
+                const response = await fetch('http://127.0.0.1:8000/predict/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -136,11 +155,11 @@
                     body: JSON.stringify({ TransactionID: txnId }),
                 });
 
+                const data = await response.json();
+
                 if (!response.ok) {
-                    const data = await response.json();
                     resultText.textContent = data.detail || 'Transaction ID not found';
                 } else {
-                    const data = await response.json();
                     resultText.textContent = data.Fraud ? 'This transaction is fraudulent.' : 'This transaction is legitimate.';
                 }
             } catch (error) {
@@ -152,10 +171,7 @@
                 resultDiv.classList.remove('hidden');
             }
         });
-
-
     </script>
-
 </body>
 
 </html>

@@ -149,11 +149,10 @@ async def admin_login(username: str = Form(...), password: str = Form(...)):
 class Transaction(BaseModel):
     TransactionID: str
 
-@app.get("/check", response_class=HTMLResponse)
-async def check_page(request: Request):
-    return templates.TemplateResponse("check.html", {"request": request})
 
-@app.post("/check/")
+
+from sklearn.preprocessing import MinMaxScaler, StandardScaler  # For scaling features before prediction
+@app.post("/predict/")
 async def predict(transaction: Transaction):
     try:
         # Log the incoming transaction ID
@@ -173,6 +172,10 @@ async def predict(transaction: Transaction):
             # Return clear message if TransactionID is not found
             raise HTTPException(status_code=404, detail=f"TID '{transaction.TransactionID}' Not found in the dataset")
         
+        # Handle Date/Timestamp columns if needed (replace 'DateColumnName' with your actual column name)
+        if 'DateColumnName' in transaction_data.columns:  # Replace 'DateColumnName' with the actual column name
+            transaction_data['DateColumnName'] = pd.to_datetime(transaction_data['DateColumnName']).astype(np.int64)
+
         # Select only numeric columns for prediction (excluding TransactionID)
         transaction_data = transaction_data.select_dtypes(include=[np.number])
 
@@ -193,15 +196,22 @@ async def predict(transaction: Transaction):
         # Ensure the length is exactly sequence_length (15)
         padded_features = padded_features[:sequence_length]  # Truncate if any excess
 
+        # Log the padded features and their type
+        print(f"Padded features: {padded_features}")
+        print(f"Padded features data type: {padded_features.dtype}")
+
         # Ensure features are in the correct format for prediction
         features_array = np.array(padded_features).reshape(1, sequence_length, 1)
 
         # Standardize the features based on the training dataset (use the same scaler from training)
-        scaler = MinMaxScaler()
+        scaler = StandardScaler()
         features_array = scaler.fit_transform(features_array.reshape(-1, 1)).reshape(1, sequence_length, 1)
 
         # Make prediction
         prediction = model.predict(features_array)
+
+        # Log the prediction result
+        print(f"Prediction result: {prediction}")
 
         # Process the prediction result (assuming the model output is a probability between 0 and 1)
         is_fraud = int(prediction[0][0] > 0.5)  # Adjust this according to your model's output
@@ -211,6 +221,12 @@ async def predict(transaction: Transaction):
         # Log the exception
         print(f"Error in prediction: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error in prediction: {str(e)}")
+
+
+
+@app.get("/check", response_class=HTMLResponse)
+async def check_page(request: Request):
+    return templates.TemplateResponse("check.html", {"request": request})
 
 from fastapi.responses import FileResponse
 
