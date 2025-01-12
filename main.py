@@ -1,18 +1,21 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Form, Request, Depends, status
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
-from fastapi.responses import JSONResponse, HTMLResponse
-from starlette.requests import Request
-from fastapi.templating import Jinja2Templates
 import os
-from fastapi.staticfiles import StaticFiles
+import uvicorn
 
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Set up Jinja2 templates
+templates = Jinja2Templates(directory="templates")
 
 # Load your pre-trained LSTM model
 model_path = 'model/Fraud_detection_model_.h5'
@@ -33,8 +36,6 @@ if df.empty:
 
 # Handle missing values (fill NaNs with 0 or mean value for numeric columns)
 df.fillna(0, inplace=True)  # Alternatively: df.fillna(df.mean(), inplace=True)
-
-print(f"Shape of DataFrame after handling NaNs: {df.shape}")
 
 # Ensure required columns exist
 required_columns = ['TransactionID', 'Amount']
@@ -64,8 +65,6 @@ def create_sequences(data, sequence_length):
 
 # Prepare data sequences for LSTM
 all_data_sequences = create_sequences(df['Amount_scaled'].values, sequence_length)
-if all_data_sequences.size == 0:
-    raise ValueError("Not enough data to create sequences. Ensure the dataset has sufficient rows.")
 
 all_data_sequences_reshaped = all_data_sequences.reshape((all_data_sequences.shape[0], sequence_length, 1))
 
@@ -87,44 +86,74 @@ fraud_status = ["FRAUD" if error > threshold else "NON-FRAUD" for error in all_d
 # Create a DataFrame for analysis
 analysis_df = pd.DataFrame({
     'TransactionID': df.iloc[sequence_length:]['TransactionID'].values,
-    'ReconstructionError': all_data_mae_loss,
+    'AccountID': df.iloc[sequence_length:]['AccountID'].values,
+    'TransactionType': df.iloc[sequence_length:]['TransactionType'].values,
+    'Location': df.iloc[sequence_length:]['Location'].values,
     'Status': fraud_status
 })
 
-# Extract Transaction IDs for Fraud and Non-Fraud
-fraudulent_transactions = analysis_df[analysis_df['Status'] == "FRAUD"]['TransactionID'].tolist()
-non_fraudulent_transactions = analysis_df[analysis_df['Status'] == "NON-FRAUD"]['TransactionID'].tolist()
+# Prepare the data for displaying in the table
+table_data = analysis_df[['TransactionID', 'AccountID', 'TransactionType', 'Location', 'Status']].to_dict(orient='records')
 
-# Prepare data for the charts (bar chart and scatter plot)
-fraud_count = len(fraudulent_transactions)
-non_fraud_count = len(non_fraudulent_transactions)
+# Return the data as a response to be used in the template
+@app.get("/analytics", response_class=HTMLResponse)
+async def get_analytics(request: Request):
+    # Limit the table data to 10 rows
+    limited_table_data = table_data[:10]
+    return templates.TemplateResponse("analytics.html", {"request": request, "table_data": limited_table_data})
 
-# Scatter plot data for the transactions
+# Scatter chart and bar chart data
+fraud_count = len(analysis_df[analysis_df['Status'] == "FRAUD"])
+non_fraud_count = len(analysis_df[analysis_df['Status'] == "NON-FRAUD"])
+
+# Scatter plot data for transactions
 scatter_data = [
     {"x": idx, "y": error, "tid": transaction_id, "type": status}
     for idx, (transaction_id, error, status) in enumerate(zip(analysis_df['TransactionID'], all_data_mae_loss, fraud_status))
 ]
 
 # Prepare JSON data for the chart API
-data = {
+chart_data = {
     "fraud_count": fraud_count,
     "non_fraud_count": non_fraud_count,
     "scatter_data": scatter_data
 }
 
-# Set up templates directory for Jinja2
-templates = Jinja2Templates(directory="templates")
+@app.get("/chart/data")
+def get_chart_data():
+    return JSONResponse(content=chart_data)
 
+# Root page
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "password123"
+
+# GET endpoint to render login.html
+@app.get("/login")
+async def get_login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+    # Admin Login Endpoint
+# Admin Login Endpoint
+@app.post("/login")
+async def admin_login(username: str = Form(...), password: str = Form(...)):
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        # Redirect to the index page if the login is successful
+        return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    else:
+        # If login fails, throw an error
+        raise HTTPException(status_code=400, detail="Invalid username or password")
+
 class Transaction(BaseModel):
     TransactionID: str
 
+@app.get("/check", response_class=HTMLResponse)
+async def check_page(request: Request):
+    return templates.TemplateResponse("check.html", {"request": request})
 
-from sklearn.preprocessing import MinMaxScaler, StandardScaler  # For scaling features before prediction
-@app.post("/predict/")
+@app.post("/check/")
 async def predict(transaction: Transaction):
     try:
         # Log the incoming transaction ID
@@ -144,10 +173,6 @@ async def predict(transaction: Transaction):
             # Return clear message if TransactionID is not found
             raise HTTPException(status_code=404, detail=f"TID '{transaction.TransactionID}' Not found in the dataset")
         
-        # Handle Date/Timestamp columns if needed (replace 'DateColumnName' with your actual column name)
-        if 'DateColumnName' in transaction_data.columns:  # Replace 'DateColumnName' with the actual column name
-            transaction_data['DateColumnName'] = pd.to_datetime(transaction_data['DateColumnName']).astype(np.int64)
-
         # Select only numeric columns for prediction (excluding TransactionID)
         transaction_data = transaction_data.select_dtypes(include=[np.number])
 
@@ -168,22 +193,15 @@ async def predict(transaction: Transaction):
         # Ensure the length is exactly sequence_length (15)
         padded_features = padded_features[:sequence_length]  # Truncate if any excess
 
-        # Log the padded features and their type
-        print(f"Padded features: {padded_features}")
-        print(f"Padded features data type: {padded_features.dtype}")
-
         # Ensure features are in the correct format for prediction
         features_array = np.array(padded_features).reshape(1, sequence_length, 1)
 
         # Standardize the features based on the training dataset (use the same scaler from training)
-        scaler = StandardScaler()
+        scaler = MinMaxScaler()
         features_array = scaler.fit_transform(features_array.reshape(-1, 1)).reshape(1, sequence_length, 1)
 
         # Make prediction
         prediction = model.predict(features_array)
-
-        # Log the prediction result
-        print(f"Prediction result: {prediction}")
 
         # Process the prediction result (assuming the model output is a probability between 0 and 1)
         is_fraud = int(prediction[0][0] > 0.5)  # Adjust this according to your model's output
@@ -194,25 +212,8 @@ async def predict(transaction: Transaction):
         print(f"Error in prediction: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error in prediction: {str(e)}")
 
-
-@app.get("/api/get_fraud_data")
-def get_fraud_data():
-    return JSONResponse(content=data)
-
-@app.get("/chart/data")
-def get_chart_data():
-    return JSONResponse(content=data)
-
-@app.get("/chart", response_class=HTMLResponse)
-async def chart_page(request: Request):
-    return templates.TemplateResponse("chart.html", {
-        "request": request,
-        "fraud_count": fraud_count,
-        "non_fraud_count": non_fraud_count,
-        "scatter_data": scatter_data,
-    })
-
 from fastapi.responses import FileResponse
+
 @app.get("/about")
 async def about_page():
     return FileResponse("templates/about.html")

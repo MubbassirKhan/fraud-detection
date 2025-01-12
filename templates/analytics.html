@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Analytics - Fraud Detection System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+    <!-- Header -->
+    <header class="bg-black text-white p-4 flex items-center justify-between">
+        <div class="text-2xl font-bold">FRAUD DETECTION SYSTEM</div>
+        <span class="text-sm italic">Admin Analytics Dashboard</span>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar -->
+        <aside class="bg-gray-900 text-white w-full md:w-64 p-4">
+            <nav class="space-y-4">
+                <a href="/" class="block p-2 rounded-md hover:bg-gray-800">Home</a>
+                <a href="analytics" class="block p-2 rounded-md bg-gray-800">View Analytics</a>
+                <a href="check" class="block p-2 rounded-md hover:bg-gray-800">Check Status</a>
+                <a href="about" class="block p-2 rounded-md hover:bg-gray-800">About Us</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <section>
+                <!-- Page Title -->
+                <div class="flex items-center justify-between mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800">Analytics Overview</h1>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-500 transition">Export
+                        Data</button>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white shadow rounded-lg p-4">
+                        <h2 class="text-xl font-bold text-gray-800">Total Transactions</h2>
+                        <p class="text-3xl font-bold text-blue-600">12,345</p>
+                    </div>
+                    <div class="bg-white shadow rounded-lg p-4">
+                        <h2 class="text-xl font-bold text-gray-800">Fraudulent Transactions</h2>
+                        <p class="text-3xl font-bold text-red-600">345</p>
+                    </div>
+                    <div class="bg-white shadow rounded-lg p-4">
+                        <h2 class="text-xl font-bold text-gray-800">Users Flagged</h2>
+                        <p class="text-3xl font-bold text-yellow-600">123</p>
+                    </div>
+                    <div class="bg-white shadow rounded-lg p-4">
+                        <h2 class="text-xl font-bold text-gray-800">Suspicious Activities</h2>
+                        <p class="text-3xl font-bold text-green-600">78</p>
+                    </div>
+                </div>
+                <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Transaction Trends</h2>
+                    <div class="flex flex-wrap lg:flex-nowrap justify-between gap-6">
+                        <!-- Bar Chart -->
+                        <div class="w-full lg:w-1/2 h-80">
+                            <canvas id="fraudTrendChart"></canvas>
+                        </div>
+                        <!-- Scatter Chart -->
+                        <div class="w-full lg:w-1/2 h-80">
+                            <canvas id="scatterChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Section -->
+                <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Detailed Fraudulent Transactions</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transaction ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transaction Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fraud Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for row in table_data %}
+                                <tr>
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ row.TransactionID }}</td>
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ row.AccountID }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">{{ row.TransactionType }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">{{ row.Location }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">{{ row.Status }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+            </section>
+        </main>
+    </div>
+</body>
+<script>
+    fetch('/chart/data')
+        .then(response => response.json())
+        .then(data => {
+            const fraudCount = data.fraud_count;
+            const nonFraudCount = data.non_fraud_count;
+            const scatterData = data.scatter_data;
+
+            // Bar Chart
+            new Chart(document.getElementById('fraudTrendChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Fraudulent Transactions', 'Non-Fraudulent Transactions'],
+                    datasets: [{
+                        label: 'Number of Transactions',
+                        data: [fraudCount, nonFraudCount],
+                        backgroundColor: ['#e74c3c', '#2ecc71'],
+                        borderColor: ['#c0392b', '#27ae60'],
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}` } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Number of Transactions', color: '#333' } },
+                        x: { title: { display: true, text: 'Transaction Type', color: '#333' } }
+                    }
+                }
+            });
+
+            // Scatter Chart
+            new Chart(document.getElementById('scatterChart').getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Fraudulent Transactions',
+                            data: scatterData.filter(d => d.type === 'FRAUD').map(d => ({ x: d.x, y: d.y })),
+                            backgroundColor: '#e74c3c',
+                            borderColor: '#c0392b',
+                            pointRadius: 6,
+                        },
+                        {
+                            label: 'Non-Fraudulent Transactions',
+                            data: scatterData.filter(d => d.type === 'NON-FRAUD').map(d => ({ x: d.x, y: d.y })),
+                            backgroundColor: '#2ecc71',
+                            borderColor: '#27ae60',
+                            pointRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const point = scatterData[context.dataIndex];
+                                    return `(${context.raw.x}, ${context.raw.y})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Transaction Index', color: '#333' } },
+                        y: { title: { display: true, text: 'Reconstruction Error', color: '#333' } }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+</script>
+</html>

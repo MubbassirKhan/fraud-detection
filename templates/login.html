@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Fraud Detection System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen">
+
+    <!-- Login Container -->
+    <div class="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Admin Login</h1>
+        
+        <!-- Login Form -->
+        <form action="/login" method="POST">
+            <div class="mb-4">
+                <label for="username" class="block text-lg font-semibold text-gray-800 mb-2">Username</label>
+                <input type="text" id="username" name="username" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your username" required>
+            </div>
+
+            <div class="mb-6">
+                <label for="password" class="block text-lg font-semibold text-gray-800 mb-2">Password</label>
+                <input type="password" id="password" name="password" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="w-full p-3 bg-black text-white rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">Login</button>
+        </form>
+    </div>
+    
+</body>
+</html>

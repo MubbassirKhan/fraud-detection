@@ -1,29 +1,20 @@
-Fraud Detection System
+<!-- Fraud Detection System -->
 
 This project implements a Fraud Detection System using a pre-trained LSTM model for detecting anomalies in financial transactions. The backend is built with FastAPI, and the UI is served using Jinja2 templates.
 
-Features
-
-Pre-trained LSTM model for fraud detection, built on Kaggle.
-
-REST API for fraud prediction.
-
-Interactive charts for fraud analysis.
-
-Simple web-based UI.
-
-Dataset
+<!-- Dataset and Platform-->
 
 Name: Financial Anomaly Data
+url: https://www.kaggle.com/datasets/devondev/financial-anomaly-data/data
 
-Platform: Kaggle
+Platform: Kaggle 
+url: https://www.kaggle.com/code/mubbassir/fraud-detection-model/edit
 
 The dataset contains financial transaction data used to train the model for fraud detection.
 
-Project Structure
-
+<!-- Project Structure -->
 .
-├── main.py                  # FastAPI application
+├── main.py                 # FastAPI application
 ├── model                   # Directory for ML models
 │   └── Fraud_detection_model_.h5  # Pre-trained LSTM model
 ├── templates               # HTML templates
@@ -34,134 +25,133 @@ Project Structure
 ├── README.md               # Documentation (this file)
 └── requirements.txt        # Python dependencies
 
-Requirements
+
+<!-- Requirements -->
 
 Prerequisites
-
 Python 3.8+
-
 Install Dependencies
-
 pip install -r requirements.txt
 
-How to Run Locally
+<!-- How to Run Locally -->
 
-Step 1: Verify Files
+----> Step 1: Verify Files
 
-Ensure the following are available in the project directory:
+      Ensure the following are available in the project directory:
 
-main.py
+      main.py
 
-model/Fraud_detection_model_.h5
+      model/Fraud_detection_model_.h5
 
-financial_anomaly_data.csv
+      financial_anomaly_data.csv
 
-templates/ directory with HTML files.
+      templates/ directory with HTML files.
 
-Step 2: Install Dependencies
+----> Step 2: Install Dependencies
 
-Run the following command to install required libraries:
+      Run the following command to install required libraries:
 
-pip install -r requirements.txt
+      pip install -r requirements.txt
 
-Step 3: Start the Application
+----> Step 3: Start the Application
 
-Start the FastAPI server:
+      Start the FastAPI server:
 
-uvicorn main:app --reload
+      uvicorn main:app --reload
 
-Step 4: Access the Application
+----> Step 4: Access the Application
 
-Open your browser and navigate to: http://127.0.0.1:8000
+      Open your browser and navigate to: http://127.0.0.1:8000
 
-API documentation is available at: http://127.0.0.1:8000/docs
+      API documentation is available at: http://127.0.0.1:8000/docs
 
-Step 5: Explore the UI
+----> Step 5: Explore the UI
 
-Dashboard: Root URL to see transaction analysis.
+      Dashboard: Root URL to see transaction analysis.
 
-Charts Page: Navigate to /chart for visualizations.
+      Charts Page: Navigate to /chart for visualizations.
 
-About Page: Navigate to /about for project details.
+      About Page: Navigate to /about for project details.
 
-API Endpoints
+      API Endpoints
 
-/ (GET)
+      / (GET)
 
-Displays the main dashboard.
+      Displays the main dashboard.
 
-/predict/ (POST)
+      /predict/ (POST)
 
-Predicts fraud for a transaction.
+      Predicts fraud for a transaction.
 
-Request Example:
+      Request Example:
 
-curl -X POST "http://127.0.0.1:8000/predict/" \
--H "Content-Type: application/json" \
--d '{"TransactionID": "<Transaction ID>"}'
+      {
+        "TransactionID": "<Transaction ID>"
+      }
 
-Response Example:
+      Response Example:
 
-{
-  "TransactionID": "<Transaction ID>",
-  "Fraud": true/false
-}
+      {
+        "TransactionID": "<Transaction ID>",
+        "Fraud": true/false
+      }
 
-/chart (GET)
+      /chart (GET)
 
-Displays fraud analysis charts.
+      Displays fraud analysis charts.
 
-/about (GET)
+      /about (GET)
 
-Displays project information.
+      Displays project information.
 
-Dataset and Model
+
+<!-- Dataset and Model -->
 
 Dataset
 
-Name: Financial Anomaly Data
+    Name: Financial Anomaly Data
 
-Platform: Kaggle
+    Platform: Kaggle
 
-The dataset includes transaction details, which are preprocessed for LSTM training.
+    The dataset includes transaction details, which are preprocessed for LSTM training.
 
 Model Training
 
-Preprocessing:
+    Preprocessing:
 
-Fill missing values.
+    Fill missing values.
 
-Normalize the Amount column.
+    Normalize the Amount column.
 
-Create sequences of 15 data points for LSTM input.
+    Create sequences of 15 data points for LSTM input.
 
 Training:
 
-LSTM model trained to learn reconstruction errors.
+    LSTM model trained to learn reconstruction errors.
 
-Model exported as Fraud_detection_model_.h5.
+    Model exported as Fraud_detection_model_.h5.
 
 Notes
 
-Fraud Detection Threshold:
+    Fraud Detection Threshold:
 
-Fraud is detected based on reconstruction error percentile (95th percentile).
+    Fraud is detected based on reconstruction error percentile (95th percentile).
 
-Error Handling:
+    Error Handling:
 
-Application handles invalid inputs, missing files, and empty datasets.
+    Application handles invalid inputs, missing files, and empty datasets.
 
 Scalability:
 
-For large datasets, consider batch processing or streaming.
+    For large datasets, consider batch processing or streaming.
 
 License
 
-This project is licensed under the MIT License.
+    This project is licensed under the MIT License.
 
 Acknowledgements
 
-Dataset and Model Training: Kaggle
+  Dataset and Model Training: Kaggle
 
 Framework: FastAPI
 
